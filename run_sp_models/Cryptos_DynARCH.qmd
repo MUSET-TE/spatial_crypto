@@ -1,0 +1,214 @@
+---
+title: "Cryptos"
+author: "Philipp Otto"
+format: html
+editor: visual
+---
+
+## Packages and Functions
+
+```{r}
+library("readxl")
+library("tidyverse")
+library("Matrix")
+library("Rsolnp")
+
+```
+
+## QML Estimation Function
+
+```{r}
+
+
+QML_ARCH <- function(Y, W, info){
+  
+  if(is.null(Y)){
+    stop("Y is missing")
+  }
+  if(is.null(W)){
+    stop("W is missing")
+  }
+  if(is.null(info)){
+    stop("Info is missing")
+  }
+ 
+  dimW <- dim(W)
+  n    <- dimW[1]
+  
+  if(length(dimW) > 3 |  dimW[1] !=  dimW[2] | dimW[2] !=  n){
+    stop("Check W matrix (W must be of dimension n x n x p)")
+  }
+  
+  if(dim(Y)[1] != n | length(dim(Y)) != 2){
+    stop("Y should be a matrix of dimension n x T")
+  }
+  
+  t <- dim(Y)[2] - 1
+  
+  logsq <- function(x){
+    return(log(x^2))
+  }
+  
+  logsq_back <- function(x, sgn){
+    return(sgn*sqrt(exp(x)))
+  }
+  
+  LogLikelihood <- function(pars, Y, W){
+    
+    dimY <- dim(Y)
+    n    <- dimY[1]
+    t    <- dim(Y)[2] - 1
+    
+    rho   <- pars[1]
+    gamma <- pars[2]
+    delta <- pars[3]
+    sig_u <- pars[4]
+    
+    S         <- diag(n) - rho * W
+    log_det_S <- determinant(S, logarithm = TRUE)$modulus
+    
+    sum_eps_2 <- 0
+    for(i.t in 2:(t+1)){
+      vec_u_t   <- S %*% Y[,i.t] - gamma * Y[,i.t-1] - delta * W %*% Y[,i.t-1]
+      sum_eps_2 <- sum_eps_2 + sum(vec_u_t^2)
+    }
+    
+    LL <- - (n*t)/2 * log(2*pi) - (n*t)/2 * log(sig_u) + t * log_det_S - 1/(2*sig_u) * sum_eps_2
+    
+    return((-1) * LL)
+  }
+  
+  start_rho   <- 0.2
+  start_gamma <- 0.2
+  start_delta <- 0.2
+  start_sig_u <- 1
+  
+  start_pars <- c(start_rho, start_gamma, start_delta, start_sig_u)
+  LB <- c(-1, -1, -1, 0.0000001)
+  UB <- c(1, 1, 1, Inf)
+  
+
+ out <- solnp(start_pars, fun = LogLikelihood, 
+                 Y = Y, W = W, 
+                 LB = LB, UB = UB,
+                 control = list(trace = TRUE))
+
+  # res <- residuals(out$pars, Y = Y, X = X, W = W)
+  
+  return(list(theta = out$pars, H = out$hessian, ll = out$values[length(out$values)]))
+  
+  
+  
+  # cat("Number of cross-sectional units:", n,  "\n")
+  # cat("Length of the time series:", t,  "\n")
+  # cat("Number of spatial lags (weight matrices):", p,  "\n")
+  
+  
+  
+  # results <- list(theta = theta, std = std, SIG = SIG, tstat = tstat, sigma2 = sigma2,
+  #                theta_alt = theta_alt, std_alt = std_alt, SIG_alt = SIG_alt, tstat_alt = tstat_alt, sigma2_alt = sigma2_alt,
+  #                e = array(e, dim = c(n, t)), e_alt = array(e_alt, dim = c(n, t)), hyt = array(hyt, dim = c(n, t)))
+  
+  return(results)
+  
+}
+
+
+
+logsq <- function(x){
+  return(log(x^2))
+}
+
+logsq_back <- function(x, sgn){
+  return(sgn*sqrt(exp(x)))
+}
+
+vec <- function(x){
+  return(as.vector(x))
+}
+
+
+
+```
+
+## Data
+
+```{r}
+
+crypto_rates <- read_excel("top100_2023_09_09.xlsx")
+
+crypto_wide <-
+  crypto_rates %>%
+  select(timestamp, name, close) %>%
+  pivot_wider(names_from = name, values_from = close, values_fill = NA)
+
+log_returns <- 
+  crypto_wide %>%  
+  mutate(across(2:ncol(.), ~ (log(.x / lag(.x)))))
+
+log_returns <-
+  log_returns %>%
+  filter(timestamp > "2014-07-01")
+
+returns_array <-
+  as.matrix(log_returns[,-1])
+
+t <- dim(returns_array)[1]
+n <- dim(returns_array)[2]
+image(1:t, 1:n, returns_array, xlab = "Time", ylab = "Cryptocurrencies")
+
+
+missing_rate <- apply(returns_array, 2, function(x) sum(is.na(x))/length(x))
+to_select <- which(missing_rate < 0.05)
+
+times <- log_returns$timestamp
+cry_names <- names(to_select)
+
+returns_array <- returns_array[, to_select]
+
+t <- dim(returns_array)[1]
+n <- dim(returns_array)[2]
+
+# imputation with N(0, 0.001)
+
+returns_array[is.na(returns_array)] <- rnorm(n = sum(is.na(returns_array)), mean = 0, sd = 0.001)
+
+returns_array[returns_array == 0] <- rnorm(n = sum(returns_array == 0), mean = 0, sd = 0.001)
+
+```
+
+## Estimation of Dynamic ARCH model (QML)
+
+```{r}
+
+# Weight matrix
+
+cor.test.p <- function(x){
+    FUN <- function(x, y) cor.test(x, y)[["p.value"]]
+    z <- outer(
+      colnames(x), 
+      colnames(x), 
+      Vectorize(function(i,j) FUN(x[,i], x[,j]))
+    )
+    dimnames(z) <- list(colnames(x), colnames(x))
+    z
+}
+
+# Row-standardised weight matrix of the (significant) correlations
+# We can play around and also check other weight matrix definitions
+
+W <- cor.test.p(returns_array) < 0.01
+W <- abs(cor(returns_array)) * W
+W <- W / array(apply(W, 1, sum), dim = c(n,n))
+
+image(Matrix(W))
+  
+results_QML <- QML_ARCH(Y = log(t(returns_array)^2), W = Matrix(W), info = list(errortype = "norm"))
+
+
+results_QML$theta 
+# the parameters are shown in the following order: spatial parameter, temporal parameter, spatiotemporal parameter, error variance log-squared errors
+stderr <- sqrt(diag(solve(results_QML$H)))
+stderr
+results_QML$theta / stderr
+```
