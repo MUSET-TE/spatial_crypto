@@ -1,6 +1,7 @@
 library(crypto2)
 library(dplyr)
 library(purrr)
+library(writexl)
 
 # Hitorical listing of the top 100 cryptos
 top100 <- crypto_listings(which = "latest", sort = "cmc_rank") %>%
