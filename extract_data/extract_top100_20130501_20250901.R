@@ -25,6 +25,7 @@ for (i in 1:nrow(top100)) {
     quotations_all <- rbind(quotations_all, quot_)
   
   rm(symbol_, quot_)
-  
+
+
 }
 write_xlsx(quotations_all, "top100_20130501_20250901.xlsx")
