@@ -171,7 +171,6 @@ The published results were produced with:
 Please cite the published article. Add the DOI here once it is assigned.
 
 ```
-Mare, C., Belbe, S., Catineanu, M., Otto, P. (2026).
 Spatial Effects and Uncertainty in Cryptocurrencies: the case of Network ARCH Models.
 Finance Research Letters. DOI to be added.
 Code and data: https://github.com/MUSET-TE/spatial_crypto
