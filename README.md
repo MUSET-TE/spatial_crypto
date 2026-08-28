@@ -1,7 +1,7 @@
 # Spatial Crypto
 
 Project applying spatial econometric models, namely Spatial ARCH and Spatial GARCH, to
-non-spatial financial data such as cryptocurrencies.
+non-spatial financial data such as cryptocurrencies (non-geographical locations).
 
 ## Study
 
@@ -172,6 +172,11 @@ The published results were produced with:
 
 All code and data in this repository are licensed under the terms described in
 [`LICENSE`](./LICENSE).
+
+## Acknowledgement
+This work was supported by a grant of the Ministry of Research, Innovation and Digitization, CNCS - UEFISCDI, project number PN-IV-P2-2.1-TE-2023-1317, within PNCDI IV. 
+
+This work also acknowledges the Marie Skłodowska-Curie Actions under the European Union's Horizon Europe research and innovation program for the Industrial Doctoral Network on Digital Finance, acronym: DIGITAL, Project No. 101119635, and the COST CA19130 FinAI – "Fintech and Artificial Intelligence in Finance - Towards a Transparent Financial Industry".
 
 ## Cite
 
