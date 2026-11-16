@@ -1,0 +1,38 @@
+Name of Quantlet: 'NARCH_diagnostics'
+
+Published in: 'Spatial Effects and Uncertainty in Cryptocurrencies: the case of Network ARCH Models'
+
+Description: 'Specification checks and the dynamic stability condition for the two
+              selected network ARCH models. Three questions are asked. Whether any
+              network dependence is left in the residuals, tested with Moran I computed
+              cross-sectionally on each day. Whether the volatility clustering has been
+              absorbed, tested with Ljung-Box at lag 20 and with ARCH-LM on the squared
+              residuals. And whether the estimated process settles rather than explodes,
+              which requires the spectral radius of the reduced-form transition matrix
+              to be strictly below one. Because W is row-standardised its largest
+              eigenvalue is one, so the condition reduces to gamma plus delta over one
+              minus rho, and the script verifies that closed form against the actual
+              largest eigenvalue of the 50 by 50 matrix rather than asserting that they
+              agree. Both selected models are stable, at 0.894 for prices and 0.224 for
+              volumes. The squared residuals are clean on both counts, while the
+              residual levels remain serially correlated for 96 and 98 percent of coins,
+              which the paper reports as a known limitation and which this Quantlet
+              shows rather than hides. Moran I is computed on the cross-section of
+              per-coin mean residuals, the convention behind Table 2, and reproduces its
+              four figures: +0.03 and -0.05 for prices, +0.04 and -0.07 for volumes, all
+              insignificant. The stricter day-by-day variant is reported alongside it.'
+
+Keywords: 'model diagnostics, Moran I, Ljung-Box, ARCH-LM, spectral radius,
+           dynamic stability, stationarity, residual analysis, spatial ARCH,
+           cryptocurrency'
+
+Author: 'Mihai-Adrian Achim, Stefana Belbe, Codruta Mare, Philipp Otto'
+
+See also: 'NARCH_data, NARCH_weights, NARCH_meanfilter, NARCH_estimation,
+           https://github.com/MUSET-TE/spatial_crypto'
+
+Submitted: '11. Nov 2026, Mihai-Adrian Achim'
+
+Datafile: 'returns_prices.csv, returns_volumes.csv'
+
+Output: 'NARCH_diagnostics.png, diagnostics.csv'
